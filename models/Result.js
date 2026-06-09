@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const resultSchema = new mongoose.Schema({
   programName: { type: String, required: true },
   studentName: { type: String, required: true },
-  className: { type: String, required: true, enum: ["S1", "S2", "S3", "S4", "S5", "SS1"] },
+  className: { type: String, required: true, enum: ["SIDRA", "USRA", "WAFD", "WIDAD", "ITHIHAD", "IFADA"] },
   prize: { type: String, required: true, enum: ["1st", "2nd", "3rd"] },
   points: { type: Number, required: true },
   isPublished: { type: Boolean, default: false },

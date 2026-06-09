@@ -8,8 +8,15 @@ import ResultModel from "./models/Result.js";
 import MinusPointModel from "./models/MinusPoint.js";
 import GalleryModel from "./models/Gallery.js";
 import AnnouncementModel from "./models/Announcement.js";
+import StudentModel from "./models/Student.js";
+import fs from "fs";
+import multer from "multer";
+import csvParser from "csv-parser";
 
 dotenv.config();
+
+// Multer setup
+const upload = multer({ dest: 'uploads/' });
 
 const app = express();
 app.use(cors());
@@ -23,8 +30,26 @@ const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/union-
 
 const startServer = async () => {
   try {
+    mongoose.connection.on('connected', () => {
+      const safeUri = MONGODB_URI.replace(/:([^:@]+)@/, ':****@');
+      console.log("Mongoose connected to db at:", safeUri);
+    });
+
+    mongoose.connection.on('error', (err) => {
+      console.error("Mongoose connection error:", err.message);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      console.log("Mongoose connection is disconnected");
+    });
+
+    process.on('SIGINT', async () => {
+      await mongoose.connection.close();
+      console.log("Mongoose connection closed on app termination");
+      process.exit(0);
+    });
+
     await mongoose.connect(MONGODB_URI);
-    console.log("Connected to MongoDB successfully at:", MONGODB_URI);
     
     await initializeDatabase();
     
@@ -33,6 +58,7 @@ const startServer = async () => {
     });
   } catch (err) {
     console.error("Failed to start server:", err.message);
+    process.exit(1);
   }
 };
 
@@ -63,7 +89,7 @@ const initialMockResults = [
   {
     programName: "Debate Competition",
     studentName: "Muhammed",
-    className: "S4",
+    className: "WIDAD",
     prize: "1st",
     points: 10,
     isPublished: true,
@@ -72,7 +98,7 @@ const initialMockResults = [
   {
     programName: "Essay Writing",
     studentName: "Ameen",
-    className: "SS1",
+    className: "IFADA",
     prize: "2nd",
     points: 7,
     isPublished: true,
@@ -81,7 +107,7 @@ const initialMockResults = [
   {
     programName: "Quiz Competition",
     studentName: "Nihad",
-    className: "S3",
+    className: "WAFD",
     prize: "3rd",
     points: 5,
     isPublished: true,
@@ -90,7 +116,7 @@ const initialMockResults = [
   {
     programName: "Coding Contest",
     studentName: "Fathima",
-    className: "S5",
+    className: "ITHIHAD",
     prize: "1st",
     points: 10,
     isPublished: false,
@@ -100,7 +126,7 @@ const initialMockResults = [
 
 const initialMockMinusPoints = [
   {
-    className: "S4",
+    className: "WIDAD",
     reason: "Late Submission of Poster Request REQ-2026-003",
     points: 5,
     approvedBy: "Ahmed Jasim",
@@ -108,7 +134,7 @@ const initialMockMinusPoints = [
     createdAt: new Date("2026-06-07T08:00:00Z")
   },
   {
-    className: "SS1",
+    className: "IFADA",
     reason: "Rule Violation in Sports Flex Setup",
     points: 3,
     approvedBy: "Prof. K. A. Rahman",
@@ -167,6 +193,13 @@ const initialMockAnnouncements = [
   }
 ];
 
+const initialMockStudents = [
+  { admissionNo: "ADM001", studentName: "Muhammed Ameen", className: "WIDAD" },
+  { admissionNo: "ADM002", studentName: "Nihad", className: "WAFD" },
+  { admissionNo: "ADM003", studentName: "Fathima", className: "ITHIHAD" },
+  { admissionNo: "ADM004", studentName: "Ahmed Jasim", className: "WIDAD" }
+];
+
 const defaultSettings = {
   portalName: "Students Union Media Portal",
   chairman: "Ahmed Jasim",
@@ -211,6 +244,12 @@ async function initializeDatabase() {
     if (announcementCount === 0) {
       console.log("No announcements found. Seeding initial mock announcements to MongoDB...");
       await AnnouncementModel.insertMany(initialMockAnnouncements);
+    }
+
+    const studentCount = await StudentModel.countDocuments();
+    if (studentCount === 0) {
+      console.log("No students found. Seeding initial mock students to MongoDB...");
+      await StudentModel.insertMany(initialMockStudents);
     }
   } catch (err) {
     console.error("Database seeding failure during initialization:", err);
@@ -503,6 +542,71 @@ app.delete("/api/announcements/:id", async (req, res) => {
   }
 });
 
+// --- STUDENTS ENDPOINTS ---
+app.get("/api/students/:admissionNo", async (req, res) => {
+  try {
+    const student = await StudentModel.findOne({ admissionNo: req.params.admissionNo });
+    if (!student) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+    res.json(student);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch student", details: err.message });
+  }
+});
+
+// --- UPLOAD ENDPOINT ---
+app.post("/api/upload/:collection", upload.single('dataset'), async (req, res) => {
+  const collectionName = req.params.collection;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+
+  const results = [];
+  try {
+    const modelMap = {
+      'requests': RequestModel,
+      'settings': SettingsModel,
+      'results': ResultModel,
+      'minusPoints': MinusPointModel,
+      'gallery': GalleryModel,
+      'announcements': AnnouncementModel,
+      'students': StudentModel
+    };
+
+    const Model = modelMap[collectionName];
+    if (!Model) {
+      fs.unlinkSync(file.path);
+      return res.status(400).json({ error: `Invalid collection name: ${collectionName}` });
+    }
+
+    fs.createReadStream(file.path)
+      .pipe(csvParser())
+      .on('data', (data) => results.push(data))
+      .on('end', async () => {
+        try {
+          if (results.length > 0) {
+            await Model.insertMany(results);
+          }
+          fs.unlinkSync(file.path);
+          res.json({ message: `Successfully uploaded ${results.length} records to ${collectionName}` });
+        } catch (dbErr) {
+          fs.unlinkSync(file.path);
+          res.status(500).json({ error: "Database insertion failed", details: dbErr.message });
+        }
+      })
+      .on('error', (err) => {
+        fs.unlinkSync(file.path);
+        res.status(500).json({ error: "Error parsing CSV", details: err.message });
+      });
+  } catch (err) {
+    if (file) fs.unlinkSync(file.path);
+    res.status(500).json({ error: "Upload processing failed", details: err.message });
+  }
+});
+
 // 6. Seed mock database
 app.post("/api/seed", async (req, res) => {
   try {
@@ -512,6 +616,7 @@ app.post("/api/seed", async (req, res) => {
     await MinusPointModel.deleteMany({});
     await GalleryModel.deleteMany({});
     await AnnouncementModel.deleteMany({});
+    await StudentModel.deleteMany({});
     
     await RequestModel.insertMany(initialMockRequests);
     const settings = await SettingsModel.create(defaultSettings);
@@ -519,6 +624,7 @@ app.post("/api/seed", async (req, res) => {
     await MinusPointModel.insertMany(initialMockMinusPoints);
     await GalleryModel.insertMany(initialMockGallery);
     await AnnouncementModel.insertMany(initialMockAnnouncements);
+    await StudentModel.insertMany(initialMockStudents);
     
     res.json({ message: "Seeded database successfully", settings });
   } catch (err) {
@@ -534,6 +640,7 @@ app.delete("/api/clear", async (req, res) => {
     await MinusPointModel.deleteMany({});
     await GalleryModel.deleteMany({});
     await AnnouncementModel.deleteMany({});
+    await StudentModel.deleteMany({});
     res.json({ message: "Cleared all requests successfully" });
   } catch (err) {
     res.status(500).json({ error: "Clear operation failed", details: err.message });
