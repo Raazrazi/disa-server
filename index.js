@@ -321,7 +321,7 @@ app.put("/api/requests/:id/status", async (req, res) => {
     }
     res.json(updated);
   } catch (err) {
-    res.status(400).json({ error: "Failed to update status", details: err.message });
+    res.status(400).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -334,7 +334,7 @@ app.get("/api/settings", async (req, res) => {
     }
     res.json(settings);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch settings", details: err.message });
+    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -348,7 +348,7 @@ app.put("/api/settings", async (req, res) => {
     );
     res.json(updated);
   } catch (err) {
-    res.status(400).json({ error: "Failed to save settings", details: err.message });
+    res.status(400).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -360,7 +360,7 @@ app.get("/api/results", async (req, res) => {
     const results = await ResultModel.find(query).sort({ createdAt: -1 });
     res.json(results);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch results", details: err.message });
+    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -374,7 +374,7 @@ app.post("/api/results", async (req, res) => {
     const saved = await newResult.save();
     res.status(201).json(saved);
   } catch (err) {
-    res.status(400).json({ error: "Failed to save result", details: err.message });
+    res.status(400).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -386,7 +386,7 @@ app.put("/api/results/:id", async (req, res) => {
     if (!updated) return res.status(404).json({ error: "Result not found" });
     res.json(updated);
   } catch (err) {
-    res.status(400).json({ error: "Failed to update result", details: err.message });
+    res.status(400).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -398,7 +398,7 @@ app.delete("/api/results/:id", async (req, res) => {
     if (!deleted) return res.status(404).json({ error: "Result not found" });
     res.json({ message: "Result deleted successfully", id });
   } catch (err) {
-    res.status(500).json({ error: "Failed to delete result", details: err.message });
+    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -415,7 +415,7 @@ app.put("/api/results/:id/publish", async (req, res) => {
     if (!updated) return res.status(404).json({ error: "Result not found" });
     res.json(updated);
   } catch (err) {
-    res.status(400).json({ error: "Failed to update publish status", details: err.message });
+    res.status(400).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -426,7 +426,7 @@ app.get("/api/minus-points", async (req, res) => {
     const minusPoints = await MinusPointModel.find().sort({ createdAt: -1 });
     res.json(minusPoints);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch minus points", details: err.message });
+    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -440,7 +440,7 @@ app.post("/api/minus-points", async (req, res) => {
     const saved = await newMinus.save();
     res.status(201).json(saved);
   } catch (err) {
-    res.status(400).json({ error: "Failed to save minus point", details: err.message });
+    res.status(400).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -452,7 +452,7 @@ app.delete("/api/minus-points/:id", async (req, res) => {
     if (!deleted) return res.status(404).json({ error: "Minus point record not found" });
     res.json({ message: "Minus point record deleted successfully", id });
   } catch (err) {
-    res.status(500).json({ error: "Failed to delete minus point", details: err.message });
+    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -464,7 +464,7 @@ app.get("/api/gallery", async (req, res) => {
     const items = await GalleryModel.find(query).sort({ createdAt: -1 });
     res.json(items);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch gallery items", details: err.message });
+    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -478,7 +478,7 @@ app.post("/api/gallery", async (req, res) => {
     const saved = await newItem.save();
     res.status(201).json(saved);
   } catch (err) {
-    res.status(400).json({ error: "Failed to save gallery item", details: err.message });
+    res.status(400).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -490,7 +490,7 @@ app.put("/api/gallery/:id", async (req, res) => {
     if (!updated) return res.status(404).json({ error: "Gallery item not found" });
     res.json(updated);
   } catch (err) {
-    res.status(400).json({ error: "Failed to update gallery item", details: err.message });
+    res.status(400).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -502,7 +502,7 @@ app.delete("/api/gallery/:id", async (req, res) => {
     if (!deleted) return res.status(404).json({ error: "Gallery item not found" });
     res.json({ message: "Gallery item deleted successfully", id });
   } catch (err) {
-    res.status(500).json({ error: "Failed to delete gallery item", details: err.message });
+    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -513,7 +513,7 @@ app.get("/api/announcements", async (req, res) => {
     const announcements = await AnnouncementModel.find().sort({ createdAt: -1 });
     res.json(announcements);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch announcements", details: err.message });
+    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -527,7 +527,7 @@ app.post("/api/announcements", async (req, res) => {
     const saved = await newAnnouncement.save();
     res.status(201).json(saved);
   } catch (err) {
-    res.status(400).json({ error: "Failed to save announcement", details: err.message });
+    res.status(400).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -539,7 +539,7 @@ app.delete("/api/announcements/:id", async (req, res) => {
     if (!deleted) return res.status(404).json({ error: "Announcement not found" });
     res.json({ message: "Announcement deleted successfully", id });
   } catch (err) {
-    res.status(500).json({ error: "Failed to delete announcement", details: err.message });
+    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -552,7 +552,7 @@ app.get("/api/students/:admissionNo", async (req, res) => {
     }
     res.json(student);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch student", details: err.message });
+    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
@@ -644,7 +644,7 @@ app.delete("/api/clear", async (req, res) => {
     await StudentModel.deleteMany({});
     res.json({ message: "Cleared all requests successfully" });
   } catch (err) {
-    res.status(500).json({ error: "Clear operation failed", details: err.message });
+    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
 
