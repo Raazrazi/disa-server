@@ -460,11 +460,19 @@ app.delete("/api/minus-points/:id", async (req, res) => {
 // Get all gallery items
 app.get("/api/gallery", async (req, res) => {
   try {
-    const query = req.query.published === "true" ? { isPublished: true } : {};
-    const items = await GalleryModel.find(query).sort({ createdAt: -1 });
+    const query =
+      req.query.published === "true"
+        ? { isPublished: true }
+        : {};
+
+    const items = await GalleryModel.find(query);
+
     res.json(items);
   } catch (err) {
-    res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
+    res.status(500).json({
+      error: "Gallery fetch failed",
+      details: err.message
+    });
   }
 });
 
