@@ -559,6 +559,7 @@ app.get("/api/students/:admissionNo", async (req, res) => {
 // --- UPLOAD ENDPOINT ---
 app.post("/api/upload/:collection", upload.single('dataset'), async (req, res) => {
   const collectionName = req.params.collection;
+  console.log('Upload route hit')
   const file = req.file;
 
   if (!file) {
@@ -578,10 +579,11 @@ app.post("/api/upload/:collection", upload.single('dataset'), async (req, res) =
     };
 
     const Model = modelMap[collectionName];
-    if (!Model) {
-      fs.unlinkSync(file.path);
+    if (!Model) { 
+      if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
       return res.status(400).json({ error: `Invalid collection name: ${collectionName}` });
     }
+    
 
     fs.createReadStream(file.path)
       .pipe(csvParser())
