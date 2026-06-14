@@ -12,6 +12,7 @@ import StudentModel from "./models/Student.js";
 import fs from "fs";
 import multer from "multer";
 import csvParser from "csv-parser";
+import cloudinary from "./config/cloudinary.js";
 
 dotenv.config();
 
@@ -477,10 +478,32 @@ app.get("/api/gallery", async (req, res) => {
 });
 
 // Add gallery item
+const uploadToCloudinary = async (base64Str) => {
+  if (!base64Str || !base64Str.startsWith("data:")) {
+    return base64Str;
+  }
+  const result = await cloudinary.uploader.upload(base64Str, {
+    folder: "union-media",
+    resource_type: "auto",
+  });
+  return result.secure_url;
+};
+
 app.post("/api/gallery", async (req, res) => {
   try {
+    let { thumbnail, mediaFile } = req.body;
+
+    if (thumbnail && thumbnail.startsWith("data:")) {
+      thumbnail = await uploadToCloudinary(thumbnail);
+    }
+    if (mediaFile && mediaFile.startsWith("data:")) {
+      mediaFile = await uploadToCloudinary(mediaFile);
+    }
+
     const newItem = new GalleryModel({
       ...req.body,
+      thumbnail,
+      mediaFile,
       createdAt: new Date()
     });
     const saved = await newItem.save();
@@ -659,3 +682,20 @@ app.delete("/api/clear", async (req, res) => {
 });
 
 
+app.post("/api/upload-image", upload.single("image"), async (req, res) => {
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "union-media",
+    });
+
+    fs.unlinkSync(req.file.path);
+
+    res.json({
+      url: result.secure_url,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
