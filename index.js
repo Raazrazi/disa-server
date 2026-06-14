@@ -574,7 +574,6 @@ app.post("/api/upload/:collection", upload.single('dataset'), async (req, res) =
     return res.status(400).json({ error: "No file uploaded" });
   }
 
-  const results = [];
   try {
     const modelMap = {
       'requests': RequestModel,
@@ -592,28 +591,29 @@ app.post("/api/upload/:collection", upload.single('dataset'), async (req, res) =
       return res.status(400).json({ error: `Invalid collection name: ${collectionName}` });
     }
     
+    const parser = fs.createReadStream(file.path).pipe(csvParser());
+    const batchSize = 1000;
+    let batch = [];
+    let totalInserted = 0;
 
-    fs.createReadStream(file.path)
-      .pipe(csvParser())
-      .on('data', (data) => results.push(data))
-      .on('end', async () => {
-        try {
-          if (results.length > 0) {
-            await Model.insertMany(results);
-          }
-          fs.unlinkSync(file.path);
-          res.json({ message: `Successfully uploaded ${results.length} records to ${collectionName}` });
-        } catch (dbErr) {
-          fs.unlinkSync(file.path);
-          res.status(500).json({ error: "Database insertion failed", details: dbErr.message });
-        }
-      })
-      .on('error', (err) => {
-        fs.unlinkSync(file.path);
-        res.status(500).json({ error: "Error parsing CSV", details: err.message });
-      });
+    for await (const record of parser) {
+      batch.push(record);
+      if (batch.length >= batchSize) {
+        await Model.insertMany(batch);
+        totalInserted += batch.length;
+        batch = [];
+      }
+    }
+
+    if (batch.length > 0) {
+      await Model.insertMany(batch);
+      totalInserted += batch.length;
+    }
+
+    if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+    res.json({ message: `Successfully uploaded ${totalInserted} records to ${collectionName}` });
   } catch (err) {
-    if (file) fs.unlinkSync(file.path);
+    if (file && fs.existsSync(file.path)) fs.unlinkSync(file.path);
     res.status(500).json({ error: "Upload processing failed", details: err.message });
   }
 });
