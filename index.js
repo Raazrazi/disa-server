@@ -13,6 +13,7 @@ import fs from "fs";
 import multer from "multer";
 import csvParser from "csv-parser";
 import cloudinary from "./config/cloudinary.js";
+import { error } from "console";
 
 dotenv.config();
 
@@ -325,6 +326,31 @@ app.put("/api/requests/:id/status", async (req, res) => {
     res.status(400).json({ error: "Wait a minute for loading server", details: err.message });
   }
 });
+
+app.delete("/api/requests/:id", async (req,res) => {
+  try {
+    const deleted = await RequestModel.findOneAndDelete({
+      requestId: req.params.id,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({
+        error: "request not found"
+      });
+    }
+
+    res.json({
+      message: "Request deleted successfully", 
+      requestId: req.params.id,
+    });
+
+} catch (err) {
+  res.status(500).json({
+    error: "failed to delete request",
+    details: err.message,
+  });
+}
+})
 
 // 4. Get settings
 app.get("/api/settings", async (req, res) => {
