@@ -67,142 +67,6 @@ const startServer = async () => {
 
 startServer();
 
-// Seed data
-const initialMockRequests = [
-  {
-    requestId: "REQ-2026-001",
-    programName: "Mock Hajj Demonstration",
-    programTitle: "Labbaik Awareness Campaign",
-    venue: "Main Auditorium & Courtyard",
-    committee: "Hajj Campaign Committee",
-    category: "Cultural",
-    description: "An awareness and practical demonstration program to educate students and public about the rituals and spiritual significance of Hajj. Will feature a mock Kaaba structure setup.",
-    posterRequirements: "Include clean, high-resolution calligraphy and elegant Islamic architecture outline. Avoid cluttered details. Physical flex print required (10x8ft).",
-    contactPerson: "Muhammed Ameen",
-    email: "muhammed.ameen@union.edu",
-    eventDateTime: "2026-06-25T10:00",
-    priority: "High",
-    status: "Pending",
-    remarks: "Awaiting final layout confirmation from organizing secretary.",
-    createdAt: new Date("2026-06-05T09:30:00Z")
-  }
-];
-
-const initialMockResults = [
-  {
-    programName: "Debate Competition",
-    studentName: "Muhammed",
-    className: "WIDAD",
-    prize: "1st",
-    points: 10,
-    isPublished: true,
-    createdAt: new Date("2026-06-05T10:00:00Z")
-  },
-  {
-    programName: "Essay Writing",
-    studentName: "Ameen",
-    className: "IFADA",
-    prize: "2nd",
-    points: 7,
-    isPublished: true,
-    createdAt: new Date("2026-06-06T14:30:00Z")
-  },
-  {
-    programName: "Quiz Competition",
-    studentName: "Nihad",
-    className: "WAFD",
-    prize: "3rd",
-    points: 5,
-    isPublished: true,
-    createdAt: new Date("2026-06-07T09:00:00Z")
-  },
-  {
-    programName: "Coding Contest",
-    studentName: "Fathima",
-    className: "ITHIHAD",
-    prize: "1st",
-    points: 10,
-    isPublished: false,
-    createdAt: new Date("2026-06-08T11:00:00Z")
-  }
-];
-
-const initialMockMinusPoints = [
-  {
-    className: "WIDAD",
-    reason: "Late Submission of Poster Request REQ-2026-003",
-    points: 5,
-    approvedBy: "Ahmed Jasim",
-    date: "2026-06-07",
-    createdAt: new Date("2026-06-07T08:00:00Z")
-  },
-  {
-    className: "IFADA",
-    reason: "Rule Violation in Sports Flex Setup",
-    points: 3,
-    approvedBy: "Prof. K. A. Rahman",
-    date: "2026-06-06",
-    createdAt: new Date("2026-06-06T12:00:00Z")
-  }
-];
-
-const initialMockGallery = [
-  {
-    title: "Mock Hajj Poster",
-    description: "Elegant calligraphy poster designed for Hajj awareness seminar.",
-    category: "Posters",
-    thumbnail: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=500&auto=format&fit=crop&q=60",
-    mediaFile: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&auto=format&fit=crop&q=60",
-    isFeatured: true,
-    isPublished: true,
-    createdAt: new Date("2026-06-05T09:30:00Z")
-  },
-  {
-    title: "World Cup Tactics Post",
-    description: "Social media feed graphics containing match analytics and squad layout.",
-    category: "Posts",
-    thumbnail: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=500&auto=format&fit=crop&q=60",
-    mediaFile: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=60",
-    isFeatured: true,
-    isPublished: true,
-    createdAt: new Date("2026-06-06T14:15:00Z")
-  },
-  {
-    title: "Eco Campaign Reel Video",
-    description: "Promotional short video for tree plantation drive around campus walls.",
-    category: "Videos",
-    thumbnail: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=500&auto=format&fit=crop&q=60",
-    mediaFile: "https://www.w3schools.com/html/mov_bbb.mp4",
-    isFeatured: false,
-    isPublished: true,
-    createdAt: new Date("2026-06-04T10:00:00Z")
-  }
-];
-
-const initialMockAnnouncements = [
-  {
-    title: "Poster Registration Mandatory Deadline Reminder",
-    content: "Please ensure all publicity design poster requests are registered in the queue strictly 48 hours prior to event scheduled timings. Late applications will be automatically blocked by the system validation checks.",
-    date: "2026-06-08",
-    isImportant: true,
-    createdAt: new Date("2026-06-08T09:00:00Z")
-  },
-  {
-    title: "Championship Leaderboard is Live",
-    content: "Championship leaderboard statistics and aggregate net points are calculated in real time. Inspect your class standings on the public portal dashboard.",
-    date: "2026-06-08",
-    isImportant: false,
-    createdAt: new Date("2026-06-08T10:00:00Z")
-  }
-];
-
-const initialMockStudents = [
-  { admissionNo: "ADM001", studentName: "Muhammed Ameen", className: "WIDAD" },
-  { admissionNo: "ADM002", studentName: "Nihad", className: "WAFD" },
-  { admissionNo: "ADM003", studentName: "Fathima", className: "ITHIHAD" },
-  { admissionNo: "ADM004", studentName: "Ahmed Jasim", className: "WIDAD" }
-];
-
 const defaultSettings = {
   portalName: "Students Union Media Portal",
   chairman: "Ahmed Jasim",
@@ -213,49 +77,13 @@ const defaultSettings = {
 // Database Initialization helper
 async function initializeDatabase() {
   try {
-    const requestCount = await RequestModel.countDocuments();
-    if (requestCount === 0) {
-      console.log("No requests found. Seeding initial mock requests to MongoDB...");
-      await RequestModel.insertMany(initialMockRequests);
-    }
-
     const settingsCount = await SettingsModel.countDocuments();
     if (settingsCount === 0) {
       console.log("No settings found. Seeding default system settings to MongoDB...");
       await SettingsModel.create(defaultSettings);
     }
-
-    const resultCount = await ResultModel.countDocuments();
-    if (resultCount === 0) {
-      console.log("No results found. Seeding initial mock results to MongoDB...");
-      await ResultModel.insertMany(initialMockResults);
-    }
-
-    const minusCount = await MinusPointModel.countDocuments();
-    if (minusCount === 0) {
-      console.log("No minus points found. Seeding initial mock minus points to MongoDB...");
-      await MinusPointModel.insertMany(initialMockMinusPoints);
-    }
-
-    const galleryCount = await GalleryModel.countDocuments();
-    if (galleryCount === 0) {
-      console.log("No gallery items found. Seeding initial mock gallery to MongoDB...");
-      await GalleryModel.insertMany(initialMockGallery);
-    }
-
-    const announcementCount = await AnnouncementModel.countDocuments();
-    if (announcementCount === 0) {
-      console.log("No announcements found. Seeding initial mock announcements to MongoDB...");
-      await AnnouncementModel.insertMany(initialMockAnnouncements);
-    }
-
-    const studentCount = await StudentModel.countDocuments();
-    if (studentCount === 0) {
-      console.log("No students found. Seeding initial mock students to MongoDB...");
-      await StudentModel.insertMany(initialMockStudents);
-    }
   } catch (err) {
-    console.error("Database seeding failure during initialization:", err);
+    console.error("Database initialization failure:", err);
   }
 }
 
@@ -667,29 +495,9 @@ app.post("/api/upload/:collection", upload.single('dataset'), async (req, res) =
   }
 });
 
-// 6. Seed mock database
+// 6. Seed mock database (Disabled)
 app.post("/api/seed", async (req, res) => {
-  try {
-    await RequestModel.deleteMany({});
-    await SettingsModel.deleteMany({});
-    await ResultModel.deleteMany({});
-    await MinusPointModel.deleteMany({});
-    await GalleryModel.deleteMany({});
-    await AnnouncementModel.deleteMany({});
-    await StudentModel.deleteMany({});
-    
-    await RequestModel.insertMany(initialMockRequests);
-    const settings = await SettingsModel.create(defaultSettings);
-    await ResultModel.insertMany(initialMockResults);
-    await MinusPointModel.insertMany(initialMockMinusPoints);
-    await GalleryModel.insertMany(initialMockGallery);
-    await AnnouncementModel.insertMany(initialMockAnnouncements);
-    await StudentModel.insertMany(initialMockStudents);
-    
-    res.json({ message: "Seeded database successfully", settings });
-  } catch (err) {
-    res.status(500).json({ error: "Seeding failed", details: err.message });
-  }
+  res.status(400).json({ error: "Mock database seeding is disabled." });
 });
 
 // 7. Clear database
