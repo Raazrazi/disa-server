@@ -277,6 +277,59 @@ app.put("/api/results/:id/publish", async (req, res) => {
   }
 });
 
+// Recategorize all results based on programme name
+app.post("/api/results/recategorize", async (req, res) => {
+  const VALID_CATEGORIES = [
+    "Union Programs",
+    "Outreach",
+    "NoticeVerse",
+    "Bonus",
+    "Publication",
+    "DISA Programs"
+  ];
+
+  function inferCategoryFromName(programName) {
+    if (!programName) return "DISA Programs";
+    const lower = programName.toLowerCase().trim();
+    for (const cat of VALID_CATEGORIES) {
+      if (lower.includes(cat.toLowerCase())) {
+        return cat;
+      }
+    }
+    return "DISA Programs";
+  }
+
+  try {
+    const allResults = await ResultModel.find({});
+    let updatedCount = 0;
+
+    const bulkOps = allResults.map((result) => {
+      const newCategory = inferCategoryFromName(result.programName);
+      updatedCount++;
+      return {
+        updateOne: {
+          filter: { _id: result._id },
+          update: { $set: { category: newCategory } }
+        }
+      };
+    });
+
+    if (bulkOps.length > 0) {
+      await ResultModel.bulkWrite(bulkOps);
+    }
+
+    // Return all updated results
+    const updatedResults = await ResultModel.find({}).sort({ createdAt: -1 });
+    res.json({
+      message: `Recategorized ${updatedCount} result(s) successfully.`,
+      updatedCount,
+      results: updatedResults
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to recategorize results", details: err.message });
+  }
+});
+
 // --- MINUS POINTS ENDPOINTS ---
 // Get all minus points
 app.get("/api/minus-points", async (req, res) => {
