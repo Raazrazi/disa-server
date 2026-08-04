@@ -10,6 +10,9 @@ import GalleryModel from "./models/Gallery.js";
 import AnnouncementModel from "./models/Announcement.js";
 import StudentModel from "./models/Student.js";
 import fs from "fs";
+import os from "os";
+import path from "path";
+import { spawn } from "child_process";
 import multer from "multer";
 import csvParser from "csv-parser";
 import cloudinary from "./config/cloudinary.js";
@@ -512,6 +515,68 @@ app.delete("/api/clear", async (req, res) => {
     res.json({ message: "Cleared all requests successfully" });
   } catch (err) {
     res.status(500).json({ error: "Wait a minute for loading server", details: err.message });
+  }
+});
+
+
+// --- CODE EXECUTION ENDPOINT ---
+app.post("/api/execute", async (req, res) => {
+  const { code, language } = req.body;
+
+  if (!code || !language) {
+    return res.status(400).json({ error: "Code and language are required." });
+  }
+
+  const supportedLanguages = ["javascript", "python"];
+  if (!supportedLanguages.includes(language)) {
+    return res.status(400).json({ error: `Language '${language}' is not supported. Supported: javascript, python.` });
+  }
+
+  const TIMEOUT_MS = 10000; // 10 second timeout
+  const tmpDir = os.tmpdir();
+  const ext = language === "python" ? ".py" : ".js";
+  const tmpFile = path.join(tmpDir, `exec_${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`);
+
+  try {
+    fs.writeFileSync(tmpFile, code, "utf8");
+
+    let cmd, args;
+    if (language === "python") {
+      cmd = "py";
+      args = [tmpFile];
+    } else {
+      cmd = "node";
+      args = [tmpFile];
+    }
+
+    const child = spawn(cmd, args, {
+      timeout: TIMEOUT_MS,
+      env: { ...process.env, PYTHONIOENCODING: "utf-8" }
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (data) => { stdout += data.toString(); });
+    child.stderr.on("data", (data) => { stderr += data.toString(); });
+
+    child.on("close", (code, signal) => {
+      try { fs.unlinkSync(tmpFile); } catch (_) { /* ignore */ }
+
+      if (signal === "SIGTERM") {
+        return res.json({ stdout: "", stderr: "⏱️ Execution timed out (10s limit).", exitCode: -1 });
+      }
+
+      res.json({ stdout, stderr, exitCode: code ?? 0 });
+    });
+
+    child.on("error", (err) => {
+      try { fs.unlinkSync(tmpFile); } catch (_) { /* ignore */ }
+      res.status(500).json({ stdout: "", stderr: `Error starting process: ${err.message}`, exitCode: -1 });
+    });
+  } catch (err) {
+    try { fs.unlinkSync(tmpFile); } catch (_) { /* ignore */ }
+    res.status(500).json({ error: "Execution failed: " + err.message });
   }
 });
 
