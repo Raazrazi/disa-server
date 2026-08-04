@@ -92,10 +92,10 @@ async function initializeDatabase() {
 
 // REST Endpoints
 
-// 1. Get all requests
+// 1. Get all requests (ordered by event date and time given)
 app.get("/api/requests", async (req, res) => {
   try {
-    const requests = await RequestModel.find().sort({ createdAt: -1 });
+    const requests = await RequestModel.find().sort({ eventDateTime: 1, createdAt: -1 });
     res.json(requests);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch requests", details: err.message });
